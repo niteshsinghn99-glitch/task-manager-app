@@ -1,1 +1,571 @@
 
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Status Tracker</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --card: #ffffff;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --border: #dbe4f0;
+        --todo: #f59e0b;
+        --progress: #3b82f6;
+        --done: #10b981;
+        --danger: #ef4444;
+        --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #eef4ff, #f8fafc);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 24px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2.2rem;
+      }
+
+      .badge {
+        background: var(--primary);
+        color: white;
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-size: 0.9rem;
+        font-weight: bold;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .form-panel {
+        padding: 22px;
+      }
+
+      .task-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      input,
+      textarea,
+      select,
+      button {
+        font: inherit;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--text);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      .danger-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: 0.2s ease;
+        font-weight: 700;
+      }
+
+      .primary-btn {
+        background: var(--primary);
+        color: white;
+      }
+
+      .primary-btn:hover {
+        background: var(--primary-dark);
+      }
+
+      .secondary-btn {
+        background: #e0edff;
+        color: var(--primary);
+      }
+
+      .secondary-btn:hover {
+        background: #cfe1ff;
+      }
+
+      .danger-btn {
+        background: #fee2e2;
+        color: var(--danger);
+      }
+
+      .danger-btn:hover {
+        background: #fecaca;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .stat-label {
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+      }
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      .tasks-panel {
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .filter-btn {
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        color: var(--text);
+        border-radius: 999px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .task-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+
+      .task-card {
+        border: 1px solid var(--border);
+        border-left: 8px solid var(--todo);
+        border-radius: 16px;
+        padding: 16px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .task-card.todo {
+        border-left-color: var(--todo);
+      }
+
+      .task-card.progress {
+        border-left-color: var(--progress);
+      }
+
+      .task-card.done {
+        border-left-color: var(--done);
+      }
+
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .task-title {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .status-pill {
+        border-radius: 999px;
+        padding: 6px 9px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .todo .status-pill {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .progress .status-pill {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .done .status-pill {
+        background: #d1fae5;
+        color: #047857;
+      }
+
+      .task-description {
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 0;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+      }
+
+      .task-actions button {
+        flex: 1;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--muted);
+        border: 1px dashed var(--border);
+        border-radius: 16px;
+        background: #fafcff;
+      }
+
+      @media (max-width: 840px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Task Status Tracker</h1>
+        <div class="badge">My Tasks</div>
+      </div>
+
+      <div class="layout">
+        <aside class="panel form-panel">
+          <form id="taskForm" class="task-form">
+            <div class="input-group">
+              <label for="title">Task Title</label>
+              <input
+                id="title"
+                type="text"
+                placeholder="Enter task title"
+                required
+              />
+            </div>
+
+            <div class="input-group">
+              <label for="description">Description</label>
+              <textarea
+                id="description"
+                placeholder="Add task details"
+              ></textarea>
+            </div>
+
+            <div class="input-group">
+              <label for="status">Status</label>
+              <select id="status">
+                <option value="todo">To Do</option>
+                <option value="progress">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+
+            <button type="submit" class="primary-btn">Add Task</button>
+          </form>
+        </aside>
+
+        <main class="tasks-panel panel">
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-label">Total</div>
+              <div class="stat-value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">In Progress</div>
+              <div class="stat-value" id="progressCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Completed</div>
+              <div class="stat-value" id="doneCount">0</div>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <div class="filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="todo">To Do</button>
+              <button class="filter-btn" data-filter="progress">In Progress</button>
+              <button class="filter-btn" data-filter="done">Done</button>
+            </div>
+          </div>
+
+          <div id="taskList" class="task-list"></div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "taskTrackerTasks";
+
+      const taskForm = document.getElementById("taskForm");
+      const titleInput = document.getElementById("title");
+      const descriptionInput = document.getElementById("description");
+      const statusInput = document.getElementById("status");
+      const taskList = document.getElementById("taskList");
+      const totalCount = document.getElementById("totalCount");
+      const progressCount = document.getElementById("progressCount");
+      const doneCount = document.getElementById("doneCount");
+      const filterButtons = document.querySelectorAll(".filter-btn");
+
+      let currentFilter = "all";
+      let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
+        {
+          id: 1,
+          title: "Design landing page",
+          description: "Create the hero section and feature cards.",
+          status: "progress",
+        },
+        {
+          id: 2,
+          title: "Prepare sprint notes",
+          description: "Summarize tasks for the team review.",
+          status: "todo",
+        },
+        {
+          id: 3,
+          title: "Fix deployment issue",
+          description: "Check the build and resolve config errors.",
+          status: "done",
+        }
+      ];
+
+      function saveTasks() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      }
+
+      function getStatusLabel(status) {
+        if (status === "todo") return "To Do";
+        if (status === "progress") return "In Progress";
+        return "Done";
+      }
+
+      function updateStats() {
+        const total = tasks.length;
+        const inProgress = tasks.filter(task => task.status === "progress").length;
+        const completed = tasks.filter(task => task.status === "done").length;
+
+        totalCount.textContent = total;
+        progressCount.textContent = inProgress;
+        doneCount.textContent = completed;
+      }
+
+      function renderTasks() {
+        const filteredTasks = tasks.filter(task => {
+          if (currentFilter === "all") return true;
+          return task.status === currentFilter;
+        });
+
+        updateStats();
+
+        if (!filteredTasks.length) {
+          taskList.innerHTML = `
+            <div class="empty-state">
+              <h3>No tasks found</h3>
+              <p>Try changing the filter or add a new task.</p>
+            </div>
+          `;
+          return;
+        }
+
+        taskList.innerHTML = filteredTasks
+          .map(
+            task => `
+              <article class="task-card ${task.status}">
+                <div class="task-header">
+                  <h3 class="task-title">${task.title}</h3>
+                  <span class="status-pill">${getStatusLabel(task.status)}</span>
+                </div>
+                <p class="task-description">${task.description || "No description provided."}</p>
+
+                <div class="task-actions">
+                  <button class="secondary-btn" data-action="edit" data-id="${task.id}">Edit</button>
+                  <button class="danger-btn" data-action="delete" data-id="${task.id}">Delete</button>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function addTask(title, description, status) {
+        tasks.unshift({
+          id: Date.now(),
+          title,
+          description,
+          status
+        });
+        saveTasks();
+        renderTasks();
+      }
+
+      function deleteTask(id) {
+        tasks = tasks.filter(task => task.id !== Number(id));
+        saveTasks();
+        renderTasks();
+      }
+
+      function editTask(id) {
+        const task = tasks.find(item => item.id === Number(id));
+        if (!task) return;
+
+        titleInput.value = task.title;
+        descriptionInput.value = task.description;
+        statusInput.value = task.status;
+
+        taskForm.dataset.editingId = String(task.id);
+        taskForm.querySelector("button[type='submit']").textContent = "Update Task";
+      }
+
+      taskForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const title = titleInput.value.trim();
+        const description = descriptionInput.value.trim();
+        const status = statusInput.value;
+
+        if (!title) {
+          alert("Please enter a task title.");
+          return;
+        }
+
+        const editingId = taskForm.dataset.editingId;
+
+        if (editingId) {
+          tasks = tasks.map(task =>
+            task.id === Number(editingId)
+              ? { ...task, title, description, status }
+              : task
+          );
+          delete taskForm.dataset.editingId;
+          taskForm.querySelector("button[type='submit']").textContent = "Add Task";
+        } else {
+          addTask(title, description, status);
+        }
+
+        saveTasks();
+        renderTasks();
+
+        taskForm.reset();
+        statusInput.value = "todo";
+      });
+
+      taskList.addEventListener("click", function (event) {
+        const action = event.target.dataset.action;
+        const id = event.target.dataset.id;
+
+        if (!action || !id) return;
+
+        if (action === "delete") {
+          deleteTask(id);
+        }
+
+        if (action === "edit") {
+          editTask(id);
+        }
+      });
+
+      filterButtons.forEach(button => {
+        button.addEventListener("click", () => {
+          currentFilter = button.dataset.filter;
+          filterButtons.forEach(btn => btn.classList.toggle("active", btn === button));
+          renderTasks();
+        });
+      });
+
+      renderTasks();
+    </script>
+  </body>
+</html>
